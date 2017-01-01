@@ -1,0 +1,93 @@
+import math
+from matplotlib import pylab as pylab
+ 
+a1 = -1
+a2 = 0
+b1 = 20
+b2 = 20
+values1 = {}
+values2 = {}
+ 
+def f_1(x):
+    return math.cos(40 / (1 + x ** 2))
+  
+def f_2(x):
+    return 1 / (1 + x ** 2)
+ 
+def average_rectangles(a, b, f, N, values):
+    h = (b - a) / N
+    integral = 0
+    for k in range(1, N + 1):
+        key = a + (k - 0.5) * h
+        if key not in values:
+            values[key] = f(key)
+        integral += values[key]
+    integral *= h
+    return integral
+ 
+def average_rectangles_economized(Q1, a, b, N, values, f):
+    h = (b - a) / N
+    integral = 0
+    for k in range(1, N + 1):
+        key = a + (k - 1/6) * h
+        if key not in values:
+            values[key] = f(key)
+        integral += values[key]
+        key = a + (k - 5/6)*h
+        if key not in values:
+            values[key] = f(key)
+        integral += values[key]
+    integral = (h * integral + Q1) / 3
+    return integral
+ 
+def runge_method(N1, N2, eps, a, b, f, p, values):
+    q = 0
+    q1 = average_rectangles(a, b, f, N1, values)
+    q2 = average_rectangles(a, b, f, N2, values)
+    h1 = (b - a) / N1
+    h2 = (b - a) / N2
+    R = ((q2 - q1) * h2 ** p) / (h1 ** p - h2 ** p)
+    while abs(R) > eps:
+        N1 = N2
+        N2 *= 3
+        q1 = q2
+        q2 = average_rectangles_economized(q1, a, b, N1, values, f)
+        h1 = (b - a) / N1
+        h2 = (b - a) / N2
+        R = ((q2 - q1) * h2 ** p) / (h1 ** p - h2 ** p)
+    q = q2
+    return q, R
+ 
+def test():
+    global values1
+    global values2
+    x1 = []
+    y1 = []
+    x2 = []
+    y2 = []
+    p = 2
+    for k in range(1, 11):
+        values2 = {}
+        values1 = {}
+        eps = 10 ** -k
+        q1, R1 = runge_method(2, 6, eps, a1, b1, f_1, p, values1)
+        q2, R2 = runge_method(2, 6, eps, a2, b2, f_2, p, values2)
+        x1.append(len(values1))
+        y1.append(abs(R1))
+        x2.append(len(values2))
+        y2.append(abs(R2))
+        values1 = {}
+        values2 = {}
+    pylab.yscale('log')
+    pylab.subplot(2, 1, 1)
+    pylab.yscale('log')
+    pylab.plot(x1, y1, 'r')
+    pylab.yscale('log')
+    pylab.subplot(2, 1, 2)
+    pylab.plot(x2, y2, 'b')
+    pylab.yscale('log')
+    pylab.show()
+ 
+if __name__ == '__main__':
+    test()
+
